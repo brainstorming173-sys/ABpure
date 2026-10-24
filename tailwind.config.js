@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { 900: 'var(--b900)', 700: 'var(--b700)', 500: 'var(--b500)', 300: 'var(--b300)', 100: 'var(--b100)', 50: 'var(--b50)' },
+        brand: Object.fromEntries([900, 700, 500, 300, 100, 50].map((n) => [n, `rgb(var(--b${n}) / <alpha-value>)`])),
       },
       fontFamily: {
         sans: ['Nunito', 'system-ui', 'sans-serif'],
