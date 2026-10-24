@@ -5,22 +5,17 @@ import { api } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const STATUS = {
-  pending: 'Pending', awaiting_confirmation: 'Awaiting confirmation', paid: 'Paid',
-  confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled',
+  new: 'New', confirmed: 'Confirmed', preparing: 'Preparing',
+  out_for_delivery: 'Out for delivery', completed: 'Completed', cancelled: 'Cancelled',
 };
+const PAYMENT = { unpaid: 'Not paid yet', awaiting_confirmation: 'Payment to check', paid: 'Paid' };
 const METHOD = { momo: 'Mobile money', cod: 'Cash on delivery', momo_delivery: 'MoMo on delivery' };
 const NETWORK = { mtn: 'MTN', telecel: 'Telecel', airteltigo: 'AirtelTigo' };
 const field = 'w-full rounded-xl border border-brand-300 bg-white px-4 py-3';
 const btn = 'rounded-full px-4 py-2 text-sm font-bold';
 
-function actionsFor(o) {
-  const a = [];
-  if (o.payment_method === 'momo' && ['pending', 'awaiting_confirmation'].includes(o.status)) a.push(['paid', 'Mark paid']);
-  if (['pending', 'paid'].includes(o.status) && (o.payment_method !== 'momo' || o.status === 'paid')) a.push(['confirmed', 'Confirm']);
-  if (['paid', 'confirmed'].includes(o.status)) a.push(['delivered', 'Mark delivered']);
-  if (!['delivered', 'cancelled'].includes(o.status)) a.push(['cancelled', 'Cancel']);
-  return a;
-}
+const payLabel = (o) =>
+  o.payment_status === 'unpaid' && o.payment_method !== 'momo' ? 'Pay on delivery' : PAYMENT[o.payment_status];
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -29,24 +24,26 @@ function Orders() {
 
   useEffect(() => { api.allOrders().then(setOrders).catch((e) => setError(e.message)); }, []);
 
-  const act = async (id, status) => {
-    setError('');
-    try {
-      const u = await api.setOrderStatus(id, status);
-      setOrders((list) => list.map((o) => (o.id === id ? { ...o, status: u.status } : o)));
-    } catch (e) { setError(e.message); }
-  };
+  const patch = (id, fields) => setOrders((list) => list.map((o) => (o.id === id ? { ...o, ...fields } : o)));
+  const run = async (fn) => { setError(''); try { await fn(); } catch (e) { setError(e.message); } };
+  const changeStatus = (id, status) => run(async () => patch(id, { status: (await api.setOrderStatus(id, status)).status }));
+  const changePayment = (id, status) =>
+    run(async () => patch(id, { payment_status: (await api.setPaymentStatus(id, status)).payment_status }));
 
-  const waiting = orders.filter((o) => o.status === 'awaiting_confirmation').length;
-  const shown = filter === 'all' ? orders : orders.filter((o) => o.status === filter);
+  const toCheck = orders.filter((o) => o.payment_status === 'awaiting_confirmation');
+  const shown =
+    filter === 'all' ? orders
+    : filter === 'check' ? toCheck
+    : orders.filter((o) => o.status === filter);
+  const chips = [['all', 'All'], ['check', `Payment to check${toCheck.length ? ` (${toCheck.length})` : ''}`], ...Object.entries(STATUS)];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {['all', ...Object.keys(STATUS)].map((s) => (
-          <button key={s} onClick={() => setFilter(s)}
-            className={`${btn} border ${filter === s ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-300'}`}>
-            {s === 'all' ? 'All' : STATUS[s]}{s === 'awaiting_confirmation' && waiting > 0 ? ` (${waiting})` : ''}
+        {chips.map(([id, label]) => (
+          <button key={id} onClick={() => setFilter(id)}
+            className={`${btn} border ${filter === id ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-300'}`}>
+            {label}
           </button>
         ))}
       </div>
@@ -56,17 +53,19 @@ function Orders() {
       {shown.map((o) => {
         const mismatch = o.payment_ref_entered && o.payment_ref_entered.trim().toLowerCase() !== o.reference.toLowerCase();
         return (
-          <div key={o.id} className={`space-y-2 rounded-2xl border bg-white p-5 ${o.status === 'awaiting_confirmation' ? 'border-brand-500' : 'border-brand-300'}`}>
+          <div key={o.id} className={`space-y-2 rounded-2xl border bg-white p-5 ${o.payment_status === 'awaiting_confirmation' ? 'border-brand-500' : 'border-brand-300'}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-lg font-black">{o.reference} · GH₵{Number(o.total)}</span>
-              <span className="rounded-full bg-brand-100 px-3 py-1 text-sm font-bold">{STATUS[o.status]}</span>
+              <select aria-label="Order status" value={o.status} onChange={(e) => changeStatus(o.id, e.target.value)}
+                className="rounded-full border border-brand-300 bg-white px-4 py-2 text-sm font-semibold">
+                {Object.entries(STATUS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+              </select>
             </div>
             <p className="text-sm">{o.customer_name || 'Customer'} · {o.phone} · {o.customer_email}</p>
             <p className="text-sm">{o.address}</p>
             <p className="text-sm font-semibold">{o.items.map((i) => `${i.qty} × ${i.name}`).join(', ')}</p>
             <p className="text-sm">
-              {METHOD[o.payment_method]}{o.network ? ` (${NETWORK[o.network]})` : ''}
-              {new Date(o.created_at).toLocaleString() && ` · ${new Date(o.created_at).toLocaleString()}`}
+              {METHOD[o.payment_method]}{o.network ? ` (${NETWORK[o.network]})` : ''} · {new Date(o.created_at).toLocaleString()}
             </p>
             {o.txn_id && (
               <div className="rounded-xl bg-brand-100 p-3 text-sm">
@@ -76,13 +75,11 @@ function Orders() {
                 {mismatch && <p className="font-bold text-red-600">The reference does not match {o.reference}. Check the SMS before marking paid.</p>}
               </div>
             )}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {actionsFor(o).map(([status, label]) => (
-                <button key={status} onClick={() => act(o.id, status)}
-                  className={`${btn} ${status === 'cancelled' ? 'border border-red-400 text-red-600' : 'bg-brand-700 text-white'}`}>
-                  {label}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <span className={`text-sm font-bold ${o.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>{payLabel(o)}</span>
+              {o.payment_status === 'paid'
+                ? <button onClick={() => changePayment(o.id, 'unpaid')} className={`${btn} border border-brand-300`}>Undo paid</button>
+                : <button onClick={() => changePayment(o.id, 'paid')} className={`${btn} bg-brand-700 text-white`}>Mark payment received</button>}
             </div>
           </div>
         );
@@ -268,8 +265,8 @@ function Team() {
 }
 
 const STATUS_COLOR = {
-  pending: 'text-orange-600', awaiting_confirmation: 'text-orange-600', paid: 'text-green-600',
-  confirmed: 'text-green-600', delivered: 'text-green-600', cancelled: 'text-red-600',
+  new: 'text-orange-600', confirmed: 'text-brand-500', preparing: 'text-brand-500',
+  out_for_delivery: 'text-brand-500', completed: 'text-green-600', cancelled: 'text-red-600',
 };
 
 function Overview({ go }) {
@@ -278,7 +275,7 @@ function Overview({ go }) {
   useEffect(() => { api.allOrders().then(setOrders).catch((e) => setError(e.message)); }, []);
 
   const list = orders || [];
-  const waiting = list.filter((o) => o.status === 'awaiting_confirmation');
+  const waiting = list.filter((o) => o.payment_status === 'awaiting_confirmation');
 
   const Row = ({ o }) => (
     <div className="rounded-xl border border-brand-300/60 p-4 text-sm">

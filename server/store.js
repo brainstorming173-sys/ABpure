@@ -55,11 +55,12 @@ export const orders = {
   byId: (id) => one('SELECT * FROM orders WHERE id=$1', [id]),
   submitPayment: (id, { reference, transactionId, paidFrom }) =>
     one(
-      `UPDATE orders SET payment_ref_entered=$2, txn_id=$3, paid_from=$4, status='awaiting_confirmation'
+      `UPDATE orders SET payment_ref_entered=$2, txn_id=$3, paid_from=$4, payment_status='awaiting_confirmation'
        WHERE id=$1 RETURNING *`,
       [id, reference, transactionId, paidFrom]
     ),
   setStatus: (id, status) => one('UPDATE orders SET status=$2 WHERE id=$1 RETURNING *', [id, status]),
+  setPaymentStatus: (id, ps) => one('UPDATE orders SET payment_status=$2 WHERE id=$1 RETURNING *', [id, ps]),
   forUser: (userId) => many('SELECT * FROM orders WHERE user_id=$1 ORDER BY created_at DESC', [userId]),
   all: () =>
     many(

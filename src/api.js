@@ -41,6 +41,7 @@ export const api = {
   submitPayment: (id, b) => request(`/orders/${id}/payment`, { method: 'POST', body: b }),
   myOrders: () => request('/orders/mine'),
   allOrders: () => request('/orders'),
+  setPaymentStatus: (id, status) => request(`/orders/${id}/payment-status`, { method: 'PATCH', body: { status } }),
   setOrderStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PATCH', body: { status } }),
   // misc
   getSettings: () => request('/settings'),

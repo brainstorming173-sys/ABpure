@@ -5,6 +5,7 @@ import { requireAuth, requireAdmin } from '../auth.js';
 
 const router = Router();
 const METHODS = ['momo', 'cod', 'momo_delivery'];
+const STATUSES = ['new', 'confirmed', 'preparing', 'out_for_delivery', 'completed', 'cancelled'];
 const NETWORKS = ['mtn', 'telecel', 'airteltigo'];
 
 // Create an order. Prices are calculated here, never trusted from the browser.
@@ -49,7 +50,7 @@ router.post('/:id/payment', requireAuth, async (req, res) => {
   const order = await orders.byId(req.params.id);
   if (!order || order.user_id !== req.user.id) return res.status(404).json({ error: 'Order not found.' });
   if (order.payment_method !== 'momo') return res.status(400).json({ error: 'This order is paid on delivery.' });
-  if (order.status !== 'pending') return res.status(400).json({ error: 'Payment details were already submitted.' });
+  if (order.payment_status !== 'unpaid') return res.status(400).json({ error: 'Payment details were already submitted.' });
 
   const { reference, transactionId, paidFrom } = req.body;
   if (!reference || !transactionId || !paidFrom)
@@ -58,9 +59,13 @@ router.post('/:id/payment', requireAuth, async (req, res) => {
 });
 
 router.patch('/:id/status', requireAuth, requireAdmin, async (req, res) => {
-  if (!['paid', 'confirmed', 'delivered', 'cancelled'].includes(req.body.status))
-    return res.status(400).json({ error: 'Invalid status.' });
+  if (!STATUSES.includes(req.body.status)) return res.status(400).json({ error: 'Invalid status.' });
   res.json(await orders.setStatus(req.params.id, req.body.status));
+});
+
+router.patch('/:id/payment-status', requireAuth, requireAdmin, async (req, res) => {
+  if (!['paid', 'unpaid'].includes(req.body.status)) return res.status(400).json({ error: 'Invalid payment status.' });
+  res.json(await orders.setPaymentStatus(req.params.id, req.body.status));
 });
 
 export default router;

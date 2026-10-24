@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_ref_entered TEXT,
   txn_id TEXT,
   paid_from TEXT,
-  status TEXT NOT NULL DEFAULT 'pending',
+  status TEXT NOT NULL DEFAULT 'new',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -54,9 +54,18 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS momo_number TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_ref_entered TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS txn_id TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_from TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'unpaid';
+ALTER TABLE orders ALTER COLUMN status SET DEFAULT 'new';
 ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_payment_status_check;
+UPDATE orders SET payment_status='awaiting_confirmation' WHERE status='awaiting_confirmation';
+UPDATE orders SET payment_status='paid' WHERE status='paid';
+UPDATE orders SET status = CASE status WHEN 'delivered' THEN 'completed' ELSE 'new' END
+  WHERE status IN ('pending','awaiting_confirmation','paid','delivered');
 ALTER TABLE orders ADD CONSTRAINT orders_status_check
-  CHECK (status IN ('pending','awaiting_confirmation','paid','confirmed','delivered','cancelled'));
+  CHECK (status IN ('new','confirmed','preparing','out_for_delivery','completed','cancelled'));
+ALTER TABLE orders ADD CONSTRAINT orders_payment_status_check
+  CHECK (payment_status IN ('unpaid','awaiting_confirmation','paid'));
 
 CREATE TABLE IF NOT EXISTS team_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
