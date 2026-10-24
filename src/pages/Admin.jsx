@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
+import { Droplet, ExternalLink, LayoutDashboard, LogOut, ShoppingBag, User, Users } from 'lucide-react';
 import { api } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -267,22 +267,99 @@ function Team() {
   );
 }
 
+const STATUS_COLOR = {
+  pending: 'text-orange-600', awaiting_confirmation: 'text-orange-600', paid: 'text-green-600',
+  confirmed: 'text-green-600', delivered: 'text-green-600', cancelled: 'text-red-600',
+};
+
+function Overview({ go }) {
+  const [orders, setOrders] = useState(null);
+  const [error, setError] = useState('');
+  useEffect(() => { api.allOrders().then(setOrders).catch((e) => setError(e.message)); }, []);
+
+  const list = orders || [];
+  const waiting = list.filter((o) => o.status === 'awaiting_confirmation');
+
+  const Row = ({ o }) => (
+    <div className="rounded-xl border border-brand-300/60 p-4 text-sm">
+      <p><b>{o.customer_name || 'Customer'}</b> <span className="text-brand-500">— {o.customer_email}</span></p>
+      <p>{o.items.map((i) => `× ${i.qty} ${i.name}`).join(', ')}</p>
+      <p>GH₵ {Number(o.total).toFixed(2)} — <span className={`font-semibold ${STATUS_COLOR[o.status]}`}>{STATUS[o.status].toLowerCase()}</span></p>
+    </div>
+  );
+
+  const Card = ({ title, rows, empty }) => (
+    <div className="space-y-4 rounded-3xl border border-brand-300/60 bg-white p-6">
+      <h2 className="flex items-center gap-3 text-2xl font-extrabold text-brand-700">
+        <ShoppingBag className="h-6 w-6" /> {title} ({rows.length})
+      </h2>
+      {rows.length === 0 && <p className="text-brand-500">{empty}</p>}
+      {rows.slice(0, 5).map((o) => <Row key={o.id} o={o} />)}
+      {rows.length > 0 && <button onClick={() => go('orders')} className={`${btn} border border-brand-300`}>Open orders</button>}
+    </div>
+  );
+
+  return (
+    <>
+      {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card title="Awaiting payment check" rows={waiting} empty="Nothing to check right now." />
+        <Card title="Recent orders" rows={list} empty="No orders yet." />
+      </div>
+    </>
+  );
+}
+
+const NAV = [
+  ['overview', 'Overview', LayoutDashboard],
+  ['orders', 'Orders', ShoppingBag],
+  ['products', 'Products', Droplet],
+  ['team', 'Team', Users],
+];
+
 export default function Admin() {
-  const { user, loading } = useAuth();
-  const [tab, setTab] = useState('orders');
+  const { user, loading, logout } = useAuth();
+  const [tab, setTab] = useState('overview');
   if (loading) return null;
   if (user?.role !== 'admin') return <Navigate to="/login" replace />;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-5 py-12">
-      <h1 className="text-3xl font-black">Admin</h1>
-      <div className="flex gap-2">
-        {[['orders', 'Orders'], ['products', 'Products'], ['team', 'Team']].map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)}
-            className={`${btn} border ${tab === id ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-300'}`}>{label}</button>
-        ))}
-      </div>
-      {tab === 'orders' ? <Orders /> : tab === 'products' ? <Products /> : <Team />}
+    <div className="flex min-h-screen flex-col bg-brand-50 md:flex-row">
+      <aside className="bg-[#052a66] text-white md:flex md:w-64 md:shrink-0 md:flex-col">
+        <div className="flex items-center gap-3 border-b border-white/10 px-6 py-6">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15"><Droplet className="h-5 w-5" /></span>
+          <div>
+            <p className="text-xl font-black leading-none">Abpure</p>
+            <p className="text-sm text-white/70">Admin</p>
+          </div>
+        </div>
+        <nav className="flex gap-1 overflow-x-auto p-3 md:flex-1 md:flex-col md:p-4">
+          {NAV.map(([id, label, Icon]) => (
+            <button key={id} onClick={() => setTab(id)}
+              className={`flex items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-left font-semibold ${tab === id ? 'bg-white/15' : 'text-white/80 hover:bg-white/10'}`}>
+              <Icon className="h-5 w-5" /> {label}
+            </button>
+          ))}
+        </nav>
+        <div className="flex gap-1 border-t border-white/10 p-3 md:flex-col md:p-4">
+          <Link to="/" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10">
+            <ExternalLink className="h-5 w-5" /> View site
+          </Link>
+          <button onClick={logout} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white/80 hover:bg-white/10">
+            <LogOut className="h-5 w-5" /> Sign out
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-1 p-6 md:p-12">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <h1 className="text-4xl font-black text-brand-700">{NAV.find(([id]) => id === tab)[1]}</h1>
+          {tab === 'overview' && <Overview go={setTab} />}
+          {tab === 'orders' && <Orders />}
+          {tab === 'products' && <Products />}
+          {tab === 'team' && <Team />}
+        </div>
+      </main>
     </div>
   );
 }

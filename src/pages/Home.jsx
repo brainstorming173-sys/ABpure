@@ -57,7 +57,8 @@ export default function Home() {
       {/* Hero */}
       <section className="relative -mt-10 flex min-h-[600px] items-center bg-brand-100 px-6 pb-20 pt-24"
         style={{
-          backgroundImage: 'linear-gradient(90deg, var(--hero-from) 0%, var(--hero-to) 70%), url(/hero.jpg)',
+          backgroundImage: 'linear-gradient(90deg, var(--hero-from) 0%, var(--hero-to) 70%), linear-gradient(rgb(110 180 255), rgb(110 180 255)), url(/hero.jpg)',
+          backgroundBlendMode: 'normal, multiply, normal',
           backgroundSize: 'cover', backgroundPosition: 'center right',
           borderBottomLeftRadius: '50% 50px', borderBottomRightRadius: '50% 50px',
         }}>

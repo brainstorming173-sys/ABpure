@@ -9,6 +9,7 @@ import Checkout from './pages/Checkout.jsx';
 import Pay from './pages/Pay.jsx';
 import OrderDone from './pages/OrderDone.jsx';
 import Admin from './pages/Admin.jsx';
+import { ResetPassword, VerifyEmail } from './pages/AuthLinks.jsx';
 
 const links = [
   ['/', 'Home'],
@@ -107,25 +108,28 @@ function Footer() {
 }
 
 export default function App() {
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
+  const admin = pathname.startsWith('/admin');
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
   }, [hash]);
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
+      {!admin && <Navbar />}
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/pay/:id" element={<Pay />} />
           <Route path="/order/:id" element={<OrderDone />} />
         </Routes>
       </main>
-      <Footer />
+      {!admin && <Footer />}
     </div>
   );
 }
