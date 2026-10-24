@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { Droplet, Sun, Moon, ShoppingCart, ChevronRight, Facebook, Instagram, Youtube } from 'lucide-react';
 import { useAuth } from './context/AuthContext.jsx';
-import { useCart } from './context/CartContext.jsx';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
-import Checkout from './pages/Checkout.jsx';
+import Buy from './pages/Buy.jsx';
 import Pay from './pages/Pay.jsx';
 import OrderDone from './pages/OrderDone.jsx';
 import Admin from './pages/Admin.jsx';
@@ -47,7 +46,6 @@ function ThemeToggle() {
 
 function Navbar() {
   const { user, logout } = useAuth();
-  const { count } = useCart();
   return (
     <header className="relative z-20 bg-[#034ba6] pb-8 text-white"
       style={{ borderBottomLeftRadius: '50% 40px', borderBottomRightRadius: '50% 40px' }}>
@@ -67,8 +65,8 @@ function Navbar() {
             <Link to="/login" className="hidden text-xs font-bold sm:block">Sign in</Link>
           )}
           <ThemeToggle />
-          <Link to="/checkout" className="flex items-center gap-2 rounded-full border border-white/80 px-4 py-2 text-xs font-bold">
-            <ShoppingCart className="h-4 w-4" /> Order Now{count > 0 && ` (${count})`} <ChevronRight className="h-4 w-4" />
+          <Link to="/#products" className="flex items-center gap-2 rounded-full border border-white/80 px-4 py-2 text-xs font-bold">
+            <ShoppingCart className="h-4 w-4" /> Order Now <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
@@ -124,7 +122,8 @@ export default function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/buy/:productId" element={<Buy />} />
+          <Route path="/checkout" element={<Navigate to="/#products" replace />} />
           <Route path="/pay/:id" element={<Pay />} />
           <Route path="/order/:id" element={<OrderDone />} />
         </Routes>

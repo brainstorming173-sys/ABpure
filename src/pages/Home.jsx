@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Award, Droplet, MapPin, Settings, ShieldCheck, ShoppingCart, Truck, User, Users } from 'lucide-react';
 import { api } from '../api.js';
-import { useCart } from '../context/CartContext.jsx';
 
 const reasons = [
   [Droplet, 'Purity First', 'Advanced filtration for crystal clear water.'],
@@ -42,10 +42,24 @@ const IconCircle = ({ icon: Icon, size = 'h-16 w-16', dark }) => (
   </div>
 );
 
+function ProductCard({ p }) {
+  return (
+    <Link to={`/buy/${p.id}`}
+      className="flex min-h-[320px] w-[300px] flex-col rounded-2xl border border-brand-300 bg-brand-100/60 p-5 text-left transition hover:-translate-y-1 hover:shadow-lg">
+      {p.image_url
+        ? <img src={p.image_url} alt={p.name} className="h-44 w-full object-contain" />
+        : <div className="flex h-44 items-center justify-center"><Droplet className="h-12 w-12 text-brand-300" /></div>}
+      <h3 className="mt-3 text-xl font-extrabold text-brand-700">{p.name}</h3>
+      <p className="text-sm text-brand-500">{p.size}</p>
+      <p className="mt-auto pt-2 font-bold">GH₵ {Number(p.price).toFixed(2)}</p>
+      <span className="mt-3 rounded-full bg-brand-700 px-5 py-2.5 text-center text-sm font-bold text-white">Order now</span>
+    </Link>
+  );
+}
+
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [team, setTeam] = useState(defaultTeam);
-  const { add } = useCart();
 
   useEffect(() => {
     api.getProducts().then(setProducts).catch(() => {});
@@ -135,17 +149,7 @@ export default function Home() {
               <div className="flex h-[320px] w-[280px] flex-col items-center justify-center rounded-2xl border border-brand-300 bg-brand-100/60 text-brand-500">
                 <Droplet className="h-12 w-12 opacity-40" /> <span className="mt-2 text-sm">Products coming soon</span>
               </div>
-            ) : products.map((p) => (
-              <div key={p.id} className="flex min-h-[320px] w-[280px] flex-col rounded-2xl border border-brand-300 bg-brand-100/60 p-5 text-left">
-                {p.image_url
-                  ? <img src={p.image_url} alt={p.name} className="h-44 w-full object-contain" />
-                  : <div className="flex h-44 items-center justify-center"><Droplet className="h-12 w-12 text-brand-300" /></div>}
-                <h3 className="mt-3 text-xl font-extrabold text-brand-700">{p.name}</h3>
-                <p className="text-sm text-brand-500">{p.size}</p>
-                <p className="mt-auto pt-2 font-bold">GH₵ {Number(p.price).toFixed(2)}</p>
-                <button onClick={() => add(p)} className="mt-3 rounded-full bg-brand-700 px-5 py-2 text-sm font-bold text-white">Add to cart</button>
-              </div>
-            ))}
+            ) : products.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
         </div>
       </section>

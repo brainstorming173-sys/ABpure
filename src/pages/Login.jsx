@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
@@ -28,6 +28,7 @@ const SUBMIT = { signin: 'Sign in', register: 'Create account', forgot: 'Send re
 export default function Login() {
   const { login, register } = useAuth();
   const nav = useNavigate();
+  const back = useLocation().state?.from || '/';
   const [mode, setMode] = useState('signin');
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState('');
@@ -44,10 +45,10 @@ export default function Login() {
     try {
       if (mode === 'signin') {
         const u = await login(form.email, form.password);
-        nav(u.role === 'admin' ? '/admin' : '/');
+        nav(u.role === 'admin' ? '/admin' : back);
       } else if (mode === 'register') {
         await register(form.name, form.email, form.password);
-        nav('/');
+        nav(back);
       } else {
         await api.forgotPassword(form.email);
         setNotice('If that email has an account, a reset link is on its way.');
