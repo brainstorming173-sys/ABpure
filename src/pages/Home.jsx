@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Award, Droplet, MapPin, Settings, ShieldCheck, ShoppingCart, Truck, User, Users } from 'lucide-react';
+import { ArrowRight, Award, Clock, Droplet, Mail, MapPin, MessageCircle, Navigation, Phone, Settings, ShieldCheck, ShoppingCart, Smartphone, Truck, User, Users } from 'lucide-react';
+import OfficeMap from '../components/OfficeMap.jsx';
 import { api } from '../api.js';
 
 const reasons = [
@@ -57,6 +58,119 @@ function ProductCard({ p }) {
   );
 }
 
+// Shows /mission.jpg from the public folder. If that file is missing, falls back to the droplet drawing.
+function MissionImage() {
+  const [broken, setBroken] = useState(false);
+  if (!broken)
+    return (
+      <div className="h-[360px] overflow-hidden rounded-2xl bg-brand-100 md:h-[420px]">
+        <img src="/mission.jpg" alt="Abpure purified water" onError={() => setBroken(true)} className="h-full w-full object-cover" />
+      </div>
+    );
+  return (
+    <div className="flex h-[360px] items-center justify-center rounded-2xl bg-brand-100 md:h-[420px]">
+      <svg viewBox="0 0 400 320" className="h-full max-h-[340px] w-full max-w-[460px]" role="img" aria-label="Water droplet with ripples">
+            <ellipse cx="200" cy="262" rx="165" ry="30" className="fill-brand-300/30 stroke-brand-300/60" strokeWidth="3" />
+            <ellipse cx="200" cy="262" rx="115" ry="20" className="fill-brand-300/30 stroke-brand-300/60" strokeWidth="3" />
+            <circle cx="200" cy="145" r="105" className="fill-brand-50/70" />
+            <path d="M200 78 C190 108 150 132 150 180 a50 50 0 0 0 100 0 C250 132 210 108 200 78 Z"
+              className="fill-none stroke-brand-500" strokeWidth="14" strokeLinejoin="round" />
+            <path d="M176 182 a24 24 0 0 0 24 24" className="fill-none stroke-brand-500" strokeWidth="9" strokeLinecap="round" />
+          </svg>
+    </div>
+  );
+}
+
+// ---- Fill these in with your real details. Anything left empty is simply not shown. ----
+const CONTACT = {
+  address: 'Accra, Ghana',
+  lat: 5.6037, lng: -0.187,   // exact office pin: right-click your office on Google Maps and copy the two numbers
+  phone: '',                  // e.g. '0201234567'
+  whatsapp: '',               // e.g. '233201234567' (country code, no + or spaces)
+  email: '',                  // e.g. 'hello@abpure.com'
+  hours: '',                  // e.g. 'Mon to Sat, 7am to 7pm'
+};
+
+const orderSteps = [
+  [ShoppingCart, 'Order online', 'Pick your product and how many bags.'],
+  [Smartphone, 'Pay your way', 'Mobile money or pay on delivery.'],
+  [Truck, 'We find you', 'Your map pin takes our rider to your door.'],
+];
+
+function FindUs() {
+  const dir = `https://www.google.com/maps/dir/?api=1&destination=${CONTACT.lat},${CONTACT.lng}`;
+  const cards = [
+    CONTACT.phone && [Phone, 'Call us', CONTACT.phone, `tel:${CONTACT.phone}`],
+    CONTACT.email && [Mail, 'Email us', CONTACT.email, `mailto:${CONTACT.email}`],
+    CONTACT.hours && [Clock, 'Opening hours', CONTACT.hours],
+    [MapPin, 'Head office', CONTACT.address],
+  ].filter(Boolean);
+
+  return (
+    <section id="contact" className="mx-auto max-w-[1400px] px-6 pb-24">
+      <div className="overflow-hidden rounded-[2rem] border border-brand-300/60 bg-white shadow-[0_20px_60px_-20px_rgb(3_75_166/0.35)]">
+        <div className="grid lg:grid-cols-[1fr_1.15fr]">
+          <div className="flex flex-col p-8 md:p-12">
+            <Eyebrow trail>Where to Find Us</Eyebrow>
+            <h2 className="mt-3 text-4xl font-black leading-tight text-brand-700 md:text-5xl">We are always<br />within reach.</h2>
+            <p className="mt-3 max-w-md text-brand-500">Visit us, call us, or order online and let us bring pure water to your door.</p>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {cards.map(([Icon, title, text, href]) => {
+                const body = (
+                  <>
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white"><Icon className="h-5 w-5" /></span>
+                    <span className="min-w-0">
+                      <span className="block text-xs font-extrabold uppercase tracking-wider text-brand-500">{title}</span>
+                      <span className="block break-words font-extrabold text-brand-700">{text}</span>
+                    </span>
+                  </>
+                );
+                const cls = 'flex items-center gap-3 rounded-2xl border border-brand-300/60 bg-brand-50 p-4';
+                return href
+                  ? <a key={title} href={href} className={`${cls} transition hover:-translate-y-0.5 hover:border-brand-500`}>{body}</a>
+                  : <div key={title} className={cls}>{body}</div>;
+              })}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold">
+              <a href={dir} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-brand-700 px-6 py-3 text-white">
+                <Navigation className="h-4 w-4" /> Get Directions <ArrowRight className="h-4 w-4" />
+              </a>
+              {CONTACT.whatsapp && (
+                <a href={`https://wa.me/${CONTACT.whatsapp}`} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-2 rounded-full border border-brand-300 px-6 py-3 text-brand-700">
+                  <MessageCircle className="h-4 w-4" /> WhatsApp us
+                </a>
+              )}
+              <a href="#products" className="flex items-center gap-2 rounded-full border border-brand-300 px-6 py-3 text-brand-700">
+                <Droplet className="h-4 w-4" /> Order now
+              </a>
+            </div>
+          </div>
+
+          <div className="relative min-h-[360px] lg:min-h-full">
+            <div className="absolute inset-0"><OfficeMap lat={CONTACT.lat} lng={CONTACT.lng} label="Abpure Head Office" /></div>
+            <div className="pointer-events-none absolute bottom-4 left-4 right-4 z-10 flex items-center gap-3 rounded-2xl bg-[#034ba6]/95 p-4 text-white shadow-xl backdrop-blur sm:right-auto sm:max-w-xs">
+              <MapPin className="h-6 w-6 shrink-0" />
+              <div className="text-sm"><p className="font-extrabold">Abpure Head Office</p><p className="text-white/80">{CONTACT.address}</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid divide-y divide-white/15 bg-[#034ba6] text-white md:grid-cols-3 md:divide-x md:divide-y-0">
+          {orderSteps.map(([Icon, title, text]) => (
+            <div key={title} className="flex items-center gap-4 px-8 py-5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-white/60"><Icon className="h-5 w-5" /></span>
+              <div><p className="font-extrabold">{title}</p><p className="text-sm text-white/80">{text}</p></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [team, setTeam] = useState(defaultTeam);
@@ -96,16 +210,7 @@ export default function Home() {
 
       {/* Mission */}
       <section id="about" className="mx-auto grid max-w-[1400px] items-center gap-10 px-6 py-20 md:grid-cols-2">
-        <div className="flex h-[360px] items-center justify-center rounded-2xl bg-brand-100 md:h-[420px]">
-          <svg viewBox="0 0 400 320" className="h-full max-h-[340px] w-full max-w-[460px]" role="img" aria-label="Water droplet with ripples">
-            <ellipse cx="200" cy="262" rx="165" ry="30" className="fill-brand-300/30 stroke-brand-300/60" strokeWidth="3" />
-            <ellipse cx="200" cy="262" rx="115" ry="20" className="fill-brand-300/30 stroke-brand-300/60" strokeWidth="3" />
-            <circle cx="200" cy="145" r="105" className="fill-brand-50/70" />
-            <path d="M200 78 C190 108 150 132 150 180 a50 50 0 0 0 100 0 C250 132 210 108 200 78 Z"
-              className="fill-none stroke-brand-500" strokeWidth="14" strokeLinejoin="round" />
-            <path d="M176 182 a24 24 0 0 0 24 24" className="fill-none stroke-brand-500" strokeWidth="9" strokeLinecap="round" />
-          </svg>
-        </div>
+        <MissionImage />
         <div>
           <Eyebrow trail>Our Mission</Eyebrow>
           <h2 className="mt-4 text-4xl font-black leading-tight text-brand-700 md:text-5xl">Quality Water<br />for a Healthier You</h2>
@@ -196,25 +301,7 @@ export default function Home() {
       </section>
 
       {/* Find us */}
-      <section id="contact" className="mx-auto max-w-[1400px] px-6 pb-20">
-        <Eyebrow trail>Where to Find Us</Eyebrow>
-        <h2 className="mt-3 text-4xl font-black text-brand-700">Where to Find Us</h2>
-        <p className="mt-2 max-w-md text-brand-500">We are always within reach. Find our products at your favorite store or contact us directly.</p>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex w-full max-w-xl items-center gap-5 rounded-xl bg-brand-100 p-5">
-            <MapPin className="h-12 w-12 shrink-0 fill-brand-500 text-brand-500" strokeWidth={1.5} />
-            <div className="text-sm text-brand-500">
-              <p className="font-extrabold text-brand-700">Abpure Head Office</p>
-              <p>Accra, Ghana</p>
-              <p>For inquiries, call or email us.</p>
-            </div>
-          </div>
-          <a href="https://www.google.com/maps/search/?api=1&query=Accra%2C%20Ghana" target="_blank" rel="noreferrer"
-            className="flex items-center gap-2 rounded-full border border-brand-300 bg-[#fff] px-6 py-3 text-sm font-bold text-[#034ba6]">
-            <MapPin className="h-4 w-4" /> Get Directions <ArrowRight className="h-4 w-4" />
-          </a>
-        </div>
-      </section>
+      <FindUs />
     </>
   );
 }

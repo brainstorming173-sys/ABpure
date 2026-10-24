@@ -11,8 +11,11 @@ const NETWORKS = ['mtn', 'telecel', 'airteltigo'];
 // Create an order. Prices are calculated here, never trusted from the browser.
 router.post('/', requireAuth, async (req, res) => {
   const { items, phone, address, paymentMethod, network, momoNumber } = req.body;
+  const lat = Number(req.body.lat), lng = Number(req.body.lng);
   if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Your cart is empty.' });
   if (!phone || !address) return res.status(400).json({ error: 'Enter your phone number and delivery address.' });
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+    return res.status(400).json({ error: 'Pin your delivery location on the map.' });
   if (!METHODS.includes(paymentMethod)) return res.status(400).json({ error: 'Choose a payment option.' });
   if (paymentMethod === 'momo' && !NETWORKS.includes(network))
     return res.status(400).json({ error: 'Choose your mobile money network.' });
@@ -20,14 +23,14 @@ router.post('/', requireAuth, async (req, res) => {
   const found = await products.byIds(items.map((i) => i.productId));
   const lines = items.map((i) => {
     const p = found.find((x) => x.id === i.productId);
-    return p && { productId: p.id, name: p.name, price: Number(p.price), qty: Math.max(1, +i.qty || 1) };
+    return p && { productId: p.id, name: p.name, price: Number(p.price), qty: Math.min(9999, Math.max(1, Math.floor(+i.qty) || 1)) };
   });
   if (lines.includes(undefined)) return res.status(400).json({ error: 'A product is no longer available.' });
 
   const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
   const order = await orders.create({
     userId: req.user.id, items: lines, total,
-    phone, address, paymentMethod,
+    phone, address, paymentMethod, lat, lng,
     network: paymentMethod === 'momo' ? network : null,
     momoNumber: paymentMethod === 'momo' ? momoNumber || phone : null,
     reference: `ABP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,

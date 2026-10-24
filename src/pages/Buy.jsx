@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Droplet, Smartphone } from 'lucide-react';
 import QtyInput from '../components/QtyInput.jsx';
+import LocationPicker from '../components/LocationPicker.jsx';
 import { api } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -13,8 +14,6 @@ const METHODS = [
 const NETWORKS = [['mtn', 'MTN', 'MoMo'], ['telecel', 'Telecel', 'Cash'], ['airteltigo', 'AirtelTigo', 'Money']];
 const input = 'w-full rounded-xl border border-brand-300 bg-white px-4 py-3';
 
-const QUICK = [10, 50, 100];
-
 export default function Buy() {
   const { productId } = useParams();
   const { user } = useAuth();
@@ -25,6 +24,7 @@ export default function Buy() {
   const [method, setMethod] = useState('momo');
   const [network, setNetwork] = useState('');
   const [form, setForm] = useState({ phone: '', address: '', momoNumber: '' });
+  const [pinned, setPinned] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -42,11 +42,12 @@ export default function Buy() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!pinned) return setError('Pin your delivery location on the map.');
     setError(''); setBusy(true);
     try {
       const { order } = await api.createOrder({
         items: [{ productId: product.id, qty }],
-        paymentMethod: method, network, ...form,
+        paymentMethod: method, network, ...form, lat: pinned.lat, lng: pinned.lng,
       });
       nav(method === 'momo' ? `/pay/${order.id}` : `/order/${order.id}`);
     } catch (err) { setError(err.message); setBusy(false); }
@@ -70,14 +71,6 @@ export default function Buy() {
       <div className="space-y-2">
         <h2 className="text-lg font-extrabold">How many bags?</h2>
         <QtyInput value={qty} onChange={setQty} />
-        <div className="flex flex-wrap gap-2 pt-1">
-          {QUICK.map((n) => (
-            <button key={n} type="button" onClick={() => setQty(n)}
-              className={`rounded-full border px-4 py-1.5 text-sm font-bold ${qty === n ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-300 text-brand-700'}`}>
-              {n}
-            </button>
-          ))}
-        </div>
       </div>
 
       {!user ? (
@@ -88,7 +81,12 @@ export default function Buy() {
         <>
       <div className="space-y-3">
         <input required placeholder="Phone number" value={form.phone} onChange={set('phone')} className={input} />
-        <textarea required placeholder="Delivery address" value={form.address} onChange={set('address')} className={input} rows={2} />
+        <textarea required placeholder="Delivery address (house, landmark, area)" value={form.address} onChange={set('address')} className={input} rows={2} />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-lg font-extrabold">Pin your location</h2>
+        <LocationPicker value={pinned} onChange={setPinned} />
       </div>
 
       <div className="space-y-3">

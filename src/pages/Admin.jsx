@@ -61,7 +61,8 @@ function Orders() {
             <tbody>
               {shown.map((o) => {
                 const mismatch = o.payment_ref_entered && o.payment_ref_entered.trim().toLowerCase() !== o.reference.toLowerCase();
-                const dest = encodeURIComponent(o.address || '');
+                const pinned = o.lat != null && o.lng != null;
+                const dest = pinned ? `${o.lat},${o.lng}` : encodeURIComponent(o.address || '');
                 return (
                   <tr key={o.id} className="border-b border-brand-300/40 align-top last:border-0">
                     <td className="px-5 py-5">
@@ -72,13 +73,13 @@ function Orders() {
                       <p className="text-base font-semibold">{o.customer_name || 'Customer'}</p>
                       <p className="text-brand-500">{o.phone}</p>
                       <p className="text-brand-500">{o.address}</p>
-                      {o.address && (
+                      {(pinned || o.address) && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           <a href={`https://www.google.com/maps/dir/?api=1&destination=${dest}`} target="_blank" rel="noreferrer"
                             className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-xs font-bold text-white">
-                            <Navigation className="h-3.5 w-3.5" /> Directions (from address)
+                            <Navigation className="h-3.5 w-3.5" /> {pinned ? 'Get directions' : 'Directions (from address)'}
                           </a>
-                          <a href={`https://waze.com/ul?q=${dest}&navigate=yes`} target="_blank" rel="noreferrer"
+                          <a href={pinned ? `https://waze.com/ul?ll=${dest}&navigate=yes` : `https://waze.com/ul?q=${dest}&navigate=yes`} target="_blank" rel="noreferrer"
                             className="inline-flex items-center rounded-full border border-brand-300 px-4 py-1.5 text-xs font-bold">
                             Waze
                           </a>

@@ -46,5 +46,9 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Something went wrong on our side.' });
 });
 
+// Delivery pin columns. Safe to run on every start; does nothing once they exist.
+query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS lat DOUBLE PRECISION; ALTER TABLE orders ADD COLUMN IF NOT EXISTS lng DOUBLE PRECISION;')
+  .catch((e) => console.warn('Could not add lat/lng columns:', e.message));
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`API running on http://localhost:${port}`));

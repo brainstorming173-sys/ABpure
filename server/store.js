@@ -47,10 +47,10 @@ export const products = {
 export const orders = {
   create: (o) =>
     one(
-      `INSERT INTO orders (user_id,items,total,phone,address,payment_method,network,momo_number,reference)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      `INSERT INTO orders (user_id,items,total,phone,address,payment_method,network,momo_number,reference,lat,lng)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
       [o.userId, JSON.stringify(o.items), o.total, o.phone, o.address,
-       o.paymentMethod, o.network, o.momoNumber, o.reference]
+       o.paymentMethod, o.network, o.momoNumber, o.reference, o.lat, o.lng]
     ),
   byId: (id) => one('SELECT * FROM orders WHERE id=$1', [id]),
   submitPayment: (id, { reference, transactionId, paidFrom }) =>
