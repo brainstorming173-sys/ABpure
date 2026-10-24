@@ -1,0 +1,213 @@
+import { useEffect, useState } from 'react';
+import { ArrowRight, Award, Droplet, MapPin, Settings, ShieldCheck, ShoppingCart, Truck, User, Users } from 'lucide-react';
+import { api } from '../api.js';
+import { useCart } from '../context/CartContext.jsx';
+
+const reasons = [
+  [Droplet, 'Purity First', 'Advanced filtration for crystal clear water.'],
+  [ShieldCheck, 'Safe & Reliable', 'Meets high quality and safety standards.'],
+  [Settings, 'Consistent Quality', 'Every bottle, engineered for your trust.'],
+  [Award, 'Health Focused', 'Pure water for better living.'],
+  [Truck, 'Fast Delivery', 'Fresh water, when you need it.'],
+  [Users, 'Customer Focused', 'Your satisfaction is our priority.'],
+];
+
+const steps = [
+  [ShoppingCart, '1. Place Order', 'Choose your preferred product.'],
+  [Settings, '2. Confirm', 'We process and prepare your order.'],
+  [Truck, '3. We Deliver', 'Safe, on-time delivery to you.'],
+  [Droplet, '4. Enjoy', 'Fresh, purified water, always.'],
+];
+
+const defaultTeam = [
+  { name: 'Michael Mensah', title: 'Founder & CEO', tagline: 'Vision. Integrity. Impact.' },
+  { name: 'Sarah Adjei', title: 'Operations Manager', tagline: 'Efficiency. Excellence. Service.' },
+  { name: 'Daniel Mensah', title: 'Production Lead', tagline: 'Quality. Safety. Consistency.' },
+  { name: 'Grace Boateng', title: 'Sales & Marketing', tagline: 'Growth. Customers. Community.' },
+  { name: 'Kwame Asante', title: 'Customer Support', tagline: 'People. Support. Satisfaction.' },
+];
+
+function Eyebrow({ children, center, trail }) {
+  const line = <span className="h-px w-6 bg-brand-300" />;
+  return (
+    <p className={`flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.2em] text-brand-700 ${center ? 'justify-center' : ''}`}>
+      {center && line}{children}{(center || trail) && line}
+    </p>
+  );
+}
+
+const IconCircle = ({ icon: Icon, size = 'h-16 w-16', dark }) => (
+  <div className={`mx-auto flex ${size} items-center justify-center rounded-full ${dark ? 'border-2 border-white/60 text-white' : 'bg-brand-100 text-brand-500'}`}>
+    <Icon className="h-7 w-7" strokeWidth={1.6} />
+  </div>
+);
+
+export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [team, setTeam] = useState(defaultTeam);
+  const { add } = useCart();
+
+  useEffect(() => {
+    api.getProducts().then(setProducts).catch(() => {});
+    api.getTeam().then((t) => t.length && setTeam(t)).catch(() => {});
+  }, []);
+
+  return (
+    <>
+      {/* Hero */}
+      <section className="relative -mt-10 flex min-h-[600px] items-center bg-brand-100 px-6 pb-20 pt-24"
+        style={{
+          backgroundImage: 'linear-gradient(90deg, var(--hero-from) 0%, var(--hero-to) 70%), url(/hero.jpg)',
+          backgroundSize: 'cover', backgroundPosition: 'center right',
+          borderBottomLeftRadius: '50% 50px', borderBottomRightRadius: '50% 50px',
+        }}>
+        <div className="mx-auto w-full max-w-[1400px]">
+          <span className="inline-block rounded-full bg-brand-100/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.15em] text-brand-700">
+            Pure Water <span className="mx-2">•</span> Healthy Living
+          </span>
+          <h1 className="mt-6 text-6xl font-black leading-[0.95] text-brand-700 md:text-8xl">Clear.<br />Refreshing.</h1>
+          <h2 className="mt-6 max-w-sm text-2xl font-extrabold text-brand-700">A Brighter, Healthier You with Abpure.</h2>
+          <p className="mt-4 max-w-sm text-brand-900/80">
+            Premium purified drinking water, crafted for your health and well-being. Clean, safe and great tasting — every time.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3 text-sm font-bold">
+            <a href="#products" className="flex items-center gap-2 rounded-full bg-brand-700 px-7 py-3.5 text-white">
+              <Droplet className="h-4 w-4 fill-white" /> Our Products
+            </a>
+            <a href="#about" className="rounded-full border border-brand-300 bg-[#fff] px-7 py-3.5 text-[#034ba6]">Learn More</a>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission */}
+      <section id="about" className="mx-auto grid max-w-[1400px] items-center gap-10 px-6 py-20 md:grid-cols-2">
+        <div className="relative flex h-[320px] items-center justify-center rounded-2xl bg-brand-100">
+          <div className="relative">
+            <div className="flex h-52 w-52 items-center justify-center rounded-full bg-brand-50/70">
+              <Droplet className="h-24 w-24 text-brand-500" strokeWidth={2.5} />
+            </div>
+            <div className="absolute -bottom-3 left-1/2 h-10 w-72 -translate-x-1/2 rounded-[50%] border-4 border-brand-300/60" />
+          </div>
+        </div>
+        <div>
+          <Eyebrow trail>Our Mission</Eyebrow>
+          <h2 className="mt-4 text-4xl font-black leading-tight text-brand-700 md:text-5xl">Quality Water<br />for a Healthier You</h2>
+          <p className="mt-5 max-w-lg text-lg leading-relaxed">
+            At Abpure, we deliver trusted purified water because we believe clean water builds healthier lives. Our mission is to
+            provide safe, great-tasting water through reliable production, consistent quality and exceptional service — for homes,
+            businesses and communities.
+          </p>
+          <a href="#why" className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-700 px-6 py-3 text-sm font-bold text-white">
+            Learn More <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
+      </section>
+
+      {/* Why choose */}
+      <section id="why" className="bg-gradient-to-b from-brand-100/60 to-brand-50 px-6 py-16">
+        <div className="mx-auto max-w-[1400px] text-center">
+          <Eyebrow center>Why Choose Abpure</Eyebrow>
+          <h2 className="mt-3 text-4xl font-black text-brand-700 md:text-5xl">Why Choose Abpure?</h2>
+          <p className="mt-3 text-brand-500">Because your health matters. And so does the water you drink.</p>
+          <div className="mt-10 grid grid-cols-2 gap-y-8 md:grid-cols-6 md:divide-x md:divide-brand-300/60">
+            {reasons.map(([Icon, title, text]) => (
+              <div key={title} className="px-4">
+                <IconCircle icon={Icon} />
+                <h3 className="mt-3 text-sm font-extrabold text-brand-700">{title}</h3>
+                <p className="mx-auto mt-1 max-w-[10rem] text-xs text-brand-500">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Products */}
+      <section id="products" className="px-6 py-20">
+        <div className="mx-auto max-w-[1400px] text-center">
+          <Eyebrow center>Our Products</Eyebrow>
+          <h2 className="mt-3 text-4xl font-black text-brand-700 md:text-5xl">Our Product</h2>
+          <p className="mt-3 text-brand-500">Pure, safe and refreshing water for every need.</p>
+          <div className="mt-10 flex flex-wrap justify-center gap-6">
+            {products.length === 0 ? (
+              <div className="flex h-[320px] w-[280px] flex-col items-center justify-center rounded-2xl border border-brand-300 bg-brand-100/60 text-brand-500">
+                <Droplet className="h-12 w-12 opacity-40" /> <span className="mt-2 text-sm">Products coming soon</span>
+              </div>
+            ) : products.map((p) => (
+              <div key={p.id} className="flex min-h-[320px] w-[280px] flex-col rounded-2xl border border-brand-300 bg-brand-100/60 p-5 text-left">
+                {p.image_url
+                  ? <img src={p.image_url} alt={p.name} className="h-44 w-full object-contain" />
+                  : <div className="flex h-44 items-center justify-center"><Droplet className="h-12 w-12 text-brand-300" /></div>}
+                <h3 className="mt-3 text-xl font-extrabold text-brand-700">{p.name}</h3>
+                <p className="text-sm text-brand-500">{p.size}</p>
+                <p className="mt-auto pt-2 font-bold">GH₵ {Number(p.price).toFixed(2)}</p>
+                <button onClick={() => add(p)} className="mt-3 rounded-full bg-brand-700 px-5 py-2 text-sm font-bold text-white">Add to cart</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Process */}
+      <section className="bg-[#034ba6] px-6 py-14 text-white"
+        style={{ borderRadius: '50% 50% 50% 50% / 30px 30px 40px 40px' }}>
+        <div className="mx-auto grid max-w-[1400px] items-center gap-10 md:grid-cols-[1fr_2fr]">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em]">Our Process</p>
+            <h2 className="mt-2 text-4xl font-black">Simple &amp; Fast</h2>
+            <p className="mt-3 max-w-xs text-sm">From our advanced filtration to your doorstep, we make clean water easy and hassle-free.</p>
+          </div>
+          <div className="grid grid-cols-2 items-start gap-6 text-center md:grid-cols-4">
+            {steps.map(([Icon, title, text], i) => (
+              <div key={title} className="relative">
+                <IconCircle icon={Icon} dark />
+                <h3 className="mt-3 text-sm font-extrabold">{title}</h3>
+                <p className="mx-auto mt-1 max-w-[9rem] text-xs text-white/80">{text}</p>
+                {i < steps.length - 1 && <ArrowRight className="absolute -right-4 top-5 hidden h-5 w-5 md:block" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Leadership */}
+      <section className="mx-auto max-w-[1400px] px-6 py-16">
+        <Eyebrow trail>Our Leadership</Eyebrow>
+        <h2 className="mt-3 text-4xl font-black text-brand-700">The People Behind Abpure</h2>
+        <p className="mt-2 max-w-md text-brand-500">We’re a dedicated team committed to delivering pure water and a healthier tomorrow.</p>
+        <div className="mt-10 grid grid-cols-2 gap-y-8 md:grid-cols-5 md:divide-x md:divide-brand-300/60">
+          {team.map((m) => (
+            <div key={m.name} className="px-4 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-brand-300">
+                {m.photo_url ? <img src={m.photo_url} alt={m.name} className="h-full w-full object-cover" /> : <User className="h-12 w-12" fill="currentColor" />}
+              </div>
+              <h3 className="mt-3 text-sm font-extrabold text-brand-700">{m.name}</h3>
+              <p className="text-xs text-brand-500">{m.title}</p>
+              <p className="mx-auto mt-0.5 max-w-[9rem] text-xs text-brand-500">{m.tagline}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Find us */}
+      <section id="contact" className="mx-auto max-w-[1400px] px-6 pb-20">
+        <Eyebrow trail>Where to Find Us</Eyebrow>
+        <h2 className="mt-3 text-4xl font-black text-brand-700">Where to Find Us</h2>
+        <p className="mt-2 max-w-md text-brand-500">We are always within reach. Find our products at your favorite store or contact us directly.</p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex w-full max-w-xl items-center gap-5 rounded-xl bg-brand-100 p-5">
+            <MapPin className="h-12 w-12 shrink-0 fill-brand-500 text-brand-500" strokeWidth={1.5} />
+            <div className="text-sm text-brand-500">
+              <p className="font-extrabold text-brand-700">Abpure Head Office</p>
+              <p>Accra, Ghana</p>
+              <p>For inquiries, call or email us.</p>
+            </div>
+          </div>
+          <a href="https://www.google.com/maps/search/?api=1&query=Accra%2C%20Ghana" target="_blank" rel="noreferrer"
+            className="flex items-center gap-2 rounded-full border border-brand-300 bg-[#fff] px-6 py-3 text-sm font-bold text-[#034ba6]">
+            <MapPin className="h-4 w-4" /> Get Directions <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
+      </section>
+    </>
+  );
+}

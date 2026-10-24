@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --b50: #f3f9ff; --b100: #e1f1ff; --b300: #7cc4ff; --b500: #0a84ff; --b700: #034ba6; --b900: #03399a;
+  --hero-from: rgba(255,255,255,.92); --hero-to: rgba(255,255,255,.15);
+}
+:root.dark {
+  --b50: #071a3a; --b100: #0d2a5c; --b300: #3b8be0; --b500: #4aa3ff; --b700: #2d7be0; --b900: #e6f1ff;
+  --hero-from: rgba(7,26,58,.92); --hero-to: rgba(7,26,58,.25);
+}
+.dark .bg-white { background-color: var(--b100); }
+input, textarea { color: inherit; }
+html { scroll-behavior: smooth; }
+
+body { @apply bg-brand-50 font-sans text-brand-900 antialiased; }
+:focus-visible { outline: 2px solid #0a84ff; outline-offset: 2px; }
