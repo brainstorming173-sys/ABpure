@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Droplet, ExternalLink, LayoutDashboard, LogOut, ShoppingBag, User, Users } from 'lucide-react';
+import { Droplet, ExternalLink, LayoutDashboard, LogOut, Navigation, ShoppingBag, User, Users } from 'lucide-react';
 import { api } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -50,40 +50,82 @@ function Orders() {
       {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
       {shown.length === 0 && <p className="text-brand-500">No orders here yet.</p>}
 
-      {shown.map((o) => {
-        const mismatch = o.payment_ref_entered && o.payment_ref_entered.trim().toLowerCase() !== o.reference.toLowerCase();
-        return (
-          <div key={o.id} className={`space-y-2 rounded-2xl border bg-white p-5 ${o.payment_status === 'awaiting_confirmation' ? 'border-brand-500' : 'border-brand-300'}`}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-lg font-black">{o.reference} · GH₵{Number(o.total)}</span>
-              <select aria-label="Order status" value={o.status} onChange={(e) => changeStatus(o.id, e.target.value)}
-                className="rounded-full border border-brand-300 bg-white px-4 py-2 text-sm font-semibold">
-                {Object.entries(STATUS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
-              </select>
-            </div>
-            <p className="text-sm">{o.customer_name || 'Customer'} · {o.phone} · {o.customer_email}</p>
-            <p className="text-sm">{o.address}</p>
-            <p className="text-sm font-semibold">{o.items.map((i) => `${i.qty} × ${i.name}`).join(', ')}</p>
-            <p className="text-sm">
-              {METHOD[o.payment_method]}{o.network ? ` (${NETWORK[o.network]})` : ''} · {new Date(o.created_at).toLocaleString()}
-            </p>
-            {o.txn_id && (
-              <div className="rounded-xl bg-brand-100 p-3 text-sm">
-                <p><b>Transaction ID:</b> {o.txn_id}</p>
-                <p><b>Sent from:</b> {o.paid_from}</p>
-                <p><b>Reference entered:</b> {o.payment_ref_entered}</p>
-                {mismatch && <p className="font-bold text-red-600">The reference does not match {o.reference}. Check the SMS before marking paid.</p>}
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <span className={`text-sm font-bold ${o.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>{payLabel(o)}</span>
-              {o.payment_status === 'paid'
-                ? <button onClick={() => changePayment(o.id, 'unpaid')} className={`${btn} border border-brand-300`}>Undo paid</button>
-                : <button onClick={() => changePayment(o.id, 'paid')} className={`${btn} bg-brand-700 text-white`}>Mark payment received</button>}
-            </div>
-          </div>
-        );
-      })}
+      {shown.length > 0 && (
+        <div className="overflow-x-auto rounded-3xl border border-brand-300/60 bg-white">
+          <table className="w-full min-w-[960px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-brand-300/60 text-base font-semibold text-brand-500">
+                {['Order', 'Customer', 'Items', 'Total', 'Payment', 'Status'].map((h) => <th key={h} className="px-5 py-4 font-semibold">{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((o) => {
+                const mismatch = o.payment_ref_entered && o.payment_ref_entered.trim().toLowerCase() !== o.reference.toLowerCase();
+                const dest = encodeURIComponent(o.address || '');
+                return (
+                  <tr key={o.id} className="border-b border-brand-300/40 align-top last:border-0">
+                    <td className="px-5 py-5">
+                      <p className="text-base font-extrabold">{o.reference}</p>
+                      <p className="text-brand-500">{new Date(o.created_at).toLocaleString()}</p>
+                    </td>
+                    <td className="px-5 py-5">
+                      <p className="text-base font-semibold">{o.customer_name || 'Customer'}</p>
+                      <p className="text-brand-500">{o.phone}</p>
+                      <p className="text-brand-500">{o.address}</p>
+                      {o.address && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <a href={`https://www.google.com/maps/dir/?api=1&destination=${dest}`} target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-xs font-bold text-white">
+                            <Navigation className="h-3.5 w-3.5" /> Directions (from address)
+                          </a>
+                          <a href={`https://waze.com/ul?q=${dest}&navigate=yes`} target="_blank" rel="noreferrer"
+                            className="inline-flex items-center rounded-full border border-brand-300 px-4 py-1.5 text-xs font-bold">
+                            Waze
+                          </a>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-5 py-5 text-base">
+                      {o.items.map((i, n) => <p key={n}>{i.qty} × {i.name}</p>)}
+                    </td>
+                    <td className="px-5 py-5 text-base font-extrabold">GH₵{Number(o.total)}</td>
+                    <td className="px-5 py-5">
+                      <p className="text-base">
+                        {METHOD[o.payment_method]}{o.payment_method === 'momo' ? ' (pay now)' : ''}{' '}
+                        <span className={`text-sm ${o.payment_status === 'paid' ? 'font-bold text-green-600' : 'text-brand-500'}`}>
+                          ({o.payment_status === 'paid' ? 'paid' : o.payment_status === 'awaiting_confirmation' ? 'to check' : 'pending'})
+                        </span>
+                      </p>
+                      {o.network && <p className="text-brand-500">{NETWORK[o.network]}</p>}
+                      {o.txn_id ? (
+                        <div className="mt-2 space-y-0.5 rounded-xl bg-brand-100 p-3">
+                          <p><b>Transaction ID:</b> {o.txn_id}</p>
+                          <p><b>Sent from:</b> {o.paid_from}</p>
+                          <p><b>Reference entered:</b> {o.payment_ref_entered}</p>
+                          {mismatch && <p className="font-bold text-red-600">Does not match {o.reference}. Check the SMS before marking paid.</p>}
+                        </div>
+                      ) : o.payment_method === 'momo' && o.payment_status !== 'paid' ? (
+                        <p className="mt-2 text-brand-500">No transaction ID submitted yet</p>
+                      ) : null}
+                      <div className="mt-2">
+                        {o.payment_status === 'paid'
+                          ? <button onClick={() => changePayment(o.id, 'unpaid')} className="rounded-full border border-brand-300 px-4 py-1.5 text-xs font-bold">Undo paid</button>
+                          : <button onClick={() => changePayment(o.id, 'paid')} className="rounded-full bg-brand-700 px-4 py-1.5 text-xs font-bold text-white">Mark paid</button>}
+                      </div>
+                    </td>
+                    <td className="px-5 py-5">
+                      <select aria-label="Order status" value={o.status} onChange={(e) => changeStatus(o.id, e.target.value)}
+                        className="w-full min-w-[150px] rounded-full border border-brand-300 bg-white px-4 py-2.5 text-base">
+                        {Object.entries(STATUS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -349,7 +391,7 @@ export default function Admin() {
       </aside>
 
       <main className="flex-1 p-6 md:p-12">
-        <div className="mx-auto max-w-5xl space-y-6">
+        <div className={`mx-auto space-y-6 ${tab === 'orders' ? 'max-w-7xl' : 'max-w-5xl'}`}>
           <h1 className="text-4xl font-black text-brand-700">{NAV.find(([id]) => id === tab)[1]}</h1>
           {tab === 'overview' && <Overview go={setTab} />}
           {tab === 'orders' && <Orders />}
