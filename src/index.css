@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --b50: #f3f9ff; --b100: #e1f1ff; --b300: #7cc4ff; --b500: #0a84ff; --b700: #034ba6; --b900: #03399a;
+  --b50: 243 249 255; --b100: 225 241 255; --b300: 124 196 255; --b500: 10 132 255; --b700: 3 75 166; --b900: 3 57 154;
   --hero-from: rgba(255,255,255,.92); --hero-to: rgba(255,255,255,.15);
 }
 :root.dark {
-  --b50: #071a3a; --b100: #0d2a5c; --b300: #3b8be0; --b500: #4aa3ff; --b700: #2d7be0; --b900: #e6f1ff;
+  --b50: 7 26 58; --b100: 13 42 92; --b300: 59 139 224; --b500: 74 163 255; --b700: 45 123 224; --b900: 230 241 255;
   --hero-from: rgba(7,26,58,.92); --hero-to: rgba(7,26,58,.25);
 }
-.dark .bg-white { background-color: var(--b100); }
+.dark .bg-white { background-color: rgb(var(--b100)); }
 input, textarea { color: inherit; }
 html { scroll-behavior: smooth; }
 

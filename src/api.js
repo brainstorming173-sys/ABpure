@@ -45,6 +45,9 @@ export const api = {
   // misc
   getSettings: () => request('/settings'),
   getTeam: () => request('/team'),
+  createTeamMember: (b) => request('/team', { method: 'POST', body: b }),
+  updateTeamMember: (id, b) => request(`/team/${id}`, { method: 'PUT', body: b }),
+  deleteTeamMember: (id) => request(`/team/${id}`, { method: 'DELETE' }),
   uploadImage: (file) => {
     const form = new FormData();
     form.append('image', file);

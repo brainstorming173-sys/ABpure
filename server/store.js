@@ -70,4 +70,17 @@ export const orders = {
 
 export const team = {
   list: () => many('SELECT * FROM team_members ORDER BY sort_order, name'),
+  create: ({ name, title, tagline, photo_url, sort_order }) =>
+    one(
+      `INSERT INTO team_members (name,title,tagline,photo_url,sort_order)
+       VALUES ($1,$2,$3,$4,COALESCE($5,(SELECT COALESCE(MAX(sort_order),0)+1 FROM team_members))) RETURNING *`,
+      [name, title, tagline || null, photo_url || null, sort_order ?? null]
+    ),
+  update: (id, { name, title, tagline, photo_url, sort_order }) =>
+    one(
+      `UPDATE team_members SET name=COALESCE($2,name), title=COALESCE($3,title), tagline=COALESCE($4,tagline),
+       photo_url=COALESCE($5,photo_url), sort_order=COALESCE($6,sort_order) WHERE id=$1 RETURNING *`,
+      [id, name ?? null, title ?? null, tagline ?? null, photo_url ?? null, sort_order ?? null]
+    ),
+  remove: (id) => query('DELETE FROM team_members WHERE id=$1', [id]),
 };

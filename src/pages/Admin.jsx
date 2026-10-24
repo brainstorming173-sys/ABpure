@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { User } from 'lucide-react';
 import { api } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -169,6 +170,103 @@ function Products() {
   );
 }
 
+const emptyMember = { name: '', title: '', tagline: '', photo_url: '', sort_order: '' };
+const DEFAULT_TEAM = [
+  ['Michael Mensah', 'Founder & CEO', 'Vision. Integrity. Impact.'],
+  ['Sarah Adjei', 'Operations Manager', 'Efficiency. Excellence. Service.'],
+  ['Daniel Mensah', 'Production Lead', 'Quality. Safety. Consistency.'],
+  ['Grace Boateng', 'Sales & Marketing', 'Growth. Customers. Community.'],
+  ['Kwame Asante', 'Customer Support', 'People. Support. Satisfaction.'],
+];
+
+function Team() {
+  const [list, setList] = useState([]);
+  const [form, setForm] = useState(emptyMember);
+  const [editing, setEditing] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const load = () => api.getTeam().then(setList).catch((e) => setError(e.message));
+  useEffect(() => { load(); }, []);
+
+  const guard = async (fn) => { setError(''); try { await fn(); await load(); } catch (e) { setError(e.message); } };
+
+  const upload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setBusy(true); setError('');
+    try { const { url } = await api.uploadImage(file); setForm((f) => ({ ...f, photo_url: url })); }
+    catch (err) { setError(err.message); }
+    setBusy(false);
+  };
+
+  const save = (e) => {
+    e.preventDefault();
+    guard(async () => {
+      const body = { ...form, sort_order: form.sort_order === '' ? undefined : Number(form.sort_order) };
+      editing ? await api.updateTeamMember(editing, body) : await api.createTeamMember(body);
+      setForm(emptyMember); setEditing(null);
+    });
+  };
+
+  const edit = (m) => {
+    setEditing(m.id);
+    setForm({ name: m.name, title: m.title, tagline: m.tagline || '', photo_url: m.photo_url || '', sort_order: String(m.sort_order) });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const addDefaults = () => guard(async () => {
+    for (const [i, [name, title, tagline]] of DEFAULT_TEAM.entries())
+      await api.createTeamMember({ name, title, tagline, sort_order: i + 1 });
+  });
+
+  return (
+    <div className="space-y-8">
+      <form onSubmit={save} className="space-y-3 rounded-2xl border border-brand-300 bg-white p-5">
+        <h2 className="text-xl font-black">{editing ? 'Edit team member' : 'Add a team member'}</h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          <input required placeholder="Name" value={form.name} onChange={set('name')} className={field} />
+          <input required placeholder="Title (e.g. Founder & CEO)" value={form.title} onChange={set('title')} className={field} />
+          <input placeholder="Tagline (e.g. Vision. Integrity. Impact.)" value={form.tagline} onChange={set('tagline')} className={field} />
+          <input type="number" min="0" placeholder="Order (1 shows first)" value={form.sort_order} onChange={set('sort_order')} className={field} />
+        </div>
+        <div className="flex items-center gap-4">
+          {form.photo_url && <img src={form.photo_url} alt="" className="h-16 w-16 rounded-full object-cover" />}
+          <input type="file" accept="image/*" onChange={upload} aria-label="Photo" />
+          {busy && <span className="text-sm">Uploading…</span>}
+        </div>
+        {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+        <div className="flex gap-2">
+          <button disabled={busy} className={`${btn} bg-brand-700 text-white disabled:opacity-50`}>{editing ? 'Save changes' : 'Add member'}</button>
+          {editing && <button type="button" onClick={() => { setEditing(null); setForm(emptyMember); }} className={`${btn} border border-brand-300`}>Cancel</button>}
+        </div>
+      </form>
+
+      <div className="space-y-3">
+        {list.length === 0 && (
+          <div className="space-y-3">
+            <p className="text-brand-500">No team members saved yet, so the website shows the default five.</p>
+            <button onClick={addDefaults} className={`${btn} border border-brand-300`}>Add the default five so I can edit them</button>
+          </div>
+        )}
+        {list.map((m) => (
+          <div key={m.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-brand-300 bg-white p-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-brand-300">
+              {m.photo_url ? <img src={m.photo_url} alt="" className="h-full w-full object-cover" /> : <User className="h-9 w-9" fill="currentColor" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-extrabold">{m.name}</p>
+              <p className="text-sm">{m.title} · {m.tagline}</p>
+            </div>
+            <button onClick={() => edit(m)} className={`${btn} border border-brand-300`}>Edit</button>
+            <button onClick={() => confirm(`Remove ${m.name}?`) && guard(() => api.deleteTeamMember(m.id))} className={`${btn} border border-red-400 text-red-600`}>Delete</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState('orders');
@@ -179,12 +277,12 @@ export default function Admin() {
     <div className="mx-auto max-w-4xl space-y-6 px-5 py-12">
       <h1 className="text-3xl font-black">Admin</h1>
       <div className="flex gap-2">
-        {[['orders', 'Orders'], ['products', 'Products']].map(([id, label]) => (
+        {[['orders', 'Orders'], ['products', 'Products'], ['team', 'Team']].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)}
             className={`${btn} border ${tab === id ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-300'}`}>{label}</button>
         ))}
       </div>
-      {tab === 'orders' ? <Orders /> : <Products />}
+      {tab === 'orders' ? <Orders /> : tab === 'products' ? <Products /> : <Team />}
     </div>
   );
 }

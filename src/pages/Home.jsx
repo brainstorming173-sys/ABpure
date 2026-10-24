@@ -81,13 +81,15 @@ export default function Home() {
 
       {/* Mission */}
       <section id="about" className="mx-auto grid max-w-[1400px] items-center gap-10 px-6 py-20 md:grid-cols-2">
-        <div className="relative flex h-[320px] items-center justify-center rounded-2xl bg-brand-100">
-          <div className="relative">
-            <div className="flex h-52 w-52 items-center justify-center rounded-full bg-brand-50/70">
-              <Droplet className="h-24 w-24 text-brand-500" strokeWidth={2.5} />
-            </div>
-            <div className="absolute -bottom-3 left-1/2 h-10 w-72 -translate-x-1/2 rounded-[50%] border-4 border-brand-300/60" />
-          </div>
+        <div className="flex h-[360px] items-center justify-center rounded-2xl bg-brand-100 md:h-[420px]">
+          <svg viewBox="0 0 400 320" className="h-full max-h-[340px] w-full max-w-[460px]" role="img" aria-label="Water droplet with ripples">
+            <ellipse cx="200" cy="262" rx="165" ry="30" className="fill-brand-300/30 stroke-brand-300/60" strokeWidth="3" />
+            <ellipse cx="200" cy="262" rx="115" ry="20" className="fill-brand-300/30 stroke-brand-300/60" strokeWidth="3" />
+            <circle cx="200" cy="145" r="105" className="fill-brand-50/70" />
+            <path d="M200 78 C190 108 150 132 150 180 a50 50 0 0 0 100 0 C250 132 210 108 200 78 Z"
+              className="fill-none stroke-brand-500" strokeWidth="14" strokeLinejoin="round" />
+            <path d="M176 182 a24 24 0 0 0 24 24" className="fill-none stroke-brand-500" strokeWidth="9" strokeLinecap="round" />
+          </svg>
         </div>
         <div>
           <Eyebrow trail>Our Mission</Eyebrow>
