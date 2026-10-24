@@ -64,7 +64,7 @@ function MissionImage() {
   if (!broken)
     return (
       <div className="h-[360px] overflow-hidden rounded-2xl bg-brand-100 md:h-[420px]">
-        <img src="/mission.jpg" alt="Abpure purified water" onError={() => setBroken(true)} className="h-full w-full object-cover" />
+        <img src="/mission.png" alt="Abpure purified water" onError={() => setBroken(true)} className="h-full w-full object-cover" />
       </div>
     );
   return (
