@@ -7,7 +7,7 @@ import { api } from '../api.js';
 const reasons = [
   [Droplet, 'Purity First', 'Advanced filtration for crystal clear water.'],
   [ShieldCheck, 'Safe & Reliable', 'Meets high quality and safety standards.'],
-  [Settings, 'Consistent Quality', 'Every bottle, engineered for your trust.'],
+  [Settings, 'Consistent Quality', 'Every sachet, engineered for your trust.'],
   [Award, 'Health Focused', 'Pure water for better living.'],
   [Truck, 'Fast Delivery', 'Fresh water, when you need it.'],
   [Users, 'Customer Focused', 'Your satisfaction is our priority.'],
